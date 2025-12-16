@@ -1,2 +1,24 @@
 ---
 # tasks file for ansible-role-vector
+- name: Download Vector package
+  ansible.builtin.get_url:
+    url: "https://packages.timber.io/vector/{{ vector_version }}/vector_{{ vector_version }}-1_amd64.deb"
+    dest: "/tmp/vector.deb"
+    mode: '0644'
+    timeout: 30
+  tags: vector
+
+- name: Install Vector from deb package
+  ansible.builtin.apt:
+    deb: "/tmp/vector.deb"
+    state: present
+  tags: vector
+
+- name: Ensure Vector service is running
+  ansible.builtin.systemd:
+    name: vector
+    state: started
+    enabled: yes
+# defaults file for vector-role
+ vector_version: "0.28.0"
+ vector_install_dir: "/opt/vector"  tags: vector
