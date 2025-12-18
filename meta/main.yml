@@ -1,6 +1,6 @@
 galaxy_info:
   author: sapr797
-  description: Ansible role for installing and configuring Lighthouse web interface for ClickHouse
+  description: Ansible role for installing and configuring Vector for ClickHouse log aggregation
   company: 
   license: MIT
   min_ansible_version: 2.9
@@ -11,8 +11,8 @@ galaxy_info:
         - jammy
   galaxy_tags:
     - monitoring
-    - webui
-    - lighthouse
+    - logging
+    - vector
     - clickhouse
 
 dependencies: []

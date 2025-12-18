@@ -1,10 +1,2 @@
 ---
-lighthouse_packages:
-  - nginx
-  - curl
-  - git
-- name: restart vector
-  systemd:
-    name: vector
-    state: restarted
-    daemon_reload: yes
+# Пустой файл - используем defaults

@@ -1,32 +1,18 @@
 sources:
-  clickhouse_log:
+  clickhouse_logs:
     type: file
     include:
       - /var/log/clickhouse-server/clickhouse-server.log
       - /var/log/clickhouse-server/clickhouse-server.err.log
     read_from: beginning
-    ignore_older_secs: 600
-
-transforms:
-  parse_clickhouse_logs:
-    type: remap
-    inputs:
-      - clickhouse_log
-    source: |
-      . = parse_json!(.message)
-      .timestamp = parse_timestamp!(.event_time, format: "%Y-%m-%d %H:%M:%S") ?? now()
-      .host = "{{ ansible_hostname }}"
 
 sinks:
-  clickhouse_metrics:
+  clickhouse_sink:
     type: clickhouse
     inputs:
-      - parse_clickhouse_logs
-    endpoint: http://{{ clickhouse_host }}:{{ clickhouse_port }}
-    database: {{ clickhouse_database }}
-    table: {{ clickhouse_metrics_table }}
+      - clickhouse_logs
+    endpoint: http://{{ clickhouse_host | default('localhost') }}:{{ clickhouse_port | default(8123) }}
+    database: {{ clickhouse_database | default('default') }}
+    table: {{ clickhouse_metrics_table | default('metric_log') }}
     skip_unknown_fields: true
     compression: gzip
-    batch:
-      max_bytes: 10485760
-      timeout_secs: 5
