@@ -1,8 +1,6 @@
 ---
 vector_version: "0.35.0"
-vector_checksum: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-vector_install_dir: "/opt/vector"
 clickhouse_host: "localhost"
 clickhouse_port: 8123
 clickhouse_database: "default"
-clickhouse_metrics_table: "metrics"
+clickhouse_metrics_table: "metric_log"

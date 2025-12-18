@@ -1,32 +1,39 @@
 ---
-- name: Download Vector binary archive
+- name: Install dependencies
+  apt:
+    name:
+      - curl
+      - wget
+      - tar
+    state: present
+    update_cache: yes
+
+- name: Download Vector binary
   get_url:
     url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-gnu.tar.gz"
     dest: "/tmp/vector.tar.gz"
-    checksum: "sha256:{{ vector_checksum | default(omit) }}"
+    timeout: 60
 
-- name: Create Vector installation directory
+- name: Create Vector directories
   file:
-    path: "{{ vector_install_dir }}"
+    path: "{{ item }}"
     state: directory
+  loop:
+    - /opt/vector
+    - /etc/vector
 
-- name: Extract Vector archive
+- name: Extract Vector
   unarchive:
     src: "/tmp/vector.tar.gz"
-    dest: "{{ vector_install_dir }}"
+    dest: "/opt/vector"
     remote_src: yes
-    creates: "{{ vector_install_dir }}/vector-{{ vector_version }}/bin/vector"
+    creates: "/opt/vector/vector-{{ vector_version }}/bin/vector"
 
-- name: Create symlink to Vector binary
+- name: Create Vector binary symlink
   file:
-    src: "{{ vector_install_dir }}/vector-{{ vector_version }}/bin/vector"
+    src: "/opt/vector/vector-{{ vector_version }}/bin/vector"
     dest: "/usr/local/bin/vector"
     state: link
-
-- name: Create Vector config directory
-  file:
-    path: /etc/vector
-    state: directory
 
 - name: Configure Vector
   template:
@@ -34,12 +41,12 @@
     dest: /etc/vector/vector.yaml
   notify: restart vector
 
-- name: Create systemd service for Vector
+- name: Create Vector systemd service
   template:
     src: vector.service.j2
     dest: /etc/systemd/system/vector.service
 
-- name: Enable and start Vector service
+- name: Start Vector service
   systemd:
     name: vector
     state: started
