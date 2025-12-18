@@ -1,24 +1,47 @@
 ---
-# tasks file for ansible-role-vector
-- name: Download Vector package
-  ansible.builtin.get_url:
-    url: "https://packages.timber.io/vector/{{ vector_version }}/vector_{{ vector_version }}-1_amd64.deb"
-    dest: "/tmp/vector.deb"
-    mode: '0644'
-    timeout: 30
-  tags: vector
+- name: Download Vector binary archive
+  get_url:
+    url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-gnu.tar.gz"
+    dest: "/tmp/vector.tar.gz"
+    checksum: "sha256:{{ vector_checksum | default(omit) }}"
 
-- name: Install Vector from deb package
-  ansible.builtin.apt:
-    deb: "/tmp/vector.deb"
-    state: present
-  tags: vector
+- name: Create Vector installation directory
+  file:
+    path: "{{ vector_install_dir }}"
+    state: directory
 
-- name: Ensure Vector service is running
-  ansible.builtin.systemd:
+- name: Extract Vector archive
+  unarchive:
+    src: "/tmp/vector.tar.gz"
+    dest: "{{ vector_install_dir }}"
+    remote_src: yes
+    creates: "{{ vector_install_dir }}/vector-{{ vector_version }}/bin/vector"
+
+- name: Create symlink to Vector binary
+  file:
+    src: "{{ vector_install_dir }}/vector-{{ vector_version }}/bin/vector"
+    dest: "/usr/local/bin/vector"
+    state: link
+
+- name: Create Vector config directory
+  file:
+    path: /etc/vector
+    state: directory
+
+- name: Configure Vector
+  template:
+    src: vector.yaml.j2
+    dest: /etc/vector/vector.yaml
+  notify: restart vector
+
+- name: Create systemd service for Vector
+  template:
+    src: vector.service.j2
+    dest: /etc/systemd/system/vector.service
+
+- name: Enable and start Vector service
+  systemd:
     name: vector
     state: started
     enabled: yes
-# defaults file for vector-role
- vector_version: "0.28.0"
- vector_install_dir: "/opt/vector"  tags: vector
+    daemon_reload: yes
